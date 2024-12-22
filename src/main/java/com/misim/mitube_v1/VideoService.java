@@ -1,11 +1,14 @@
 package com.misim.mitube_v1;
 
+import com.misim.mitube_v1.domain.VideoFile;
+import com.misim.mitube_v1.domain.VideoMetadata;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import org.springframework.core.io.Resource;
@@ -41,6 +44,7 @@ public class VideoService {
         }
 
         File uploadDir = new File(UPLOAD_DIR);
+
         if (!uploadDir.exists()) {
             if (!uploadDir.mkdirs()) {
                 throw new RuntimeException("Unable to create upload directory.");
@@ -68,7 +72,8 @@ public class VideoService {
 
     public Resource stream(long videoId) {
 
-        VideoMetadataEntity videoMetadataEntity = videoMetadataRepository.findById(videoId).orElseThrow(() -> new RuntimeException("Video not found"));
+        VideoMetadataEntity videoMetadataEntity = videoMetadataRepository.findById(videoId)
+            .orElseThrow(() -> new RuntimeException("Video not found"));
 
         try {
 
@@ -85,5 +90,17 @@ public class VideoService {
             throw new RuntimeException("Error while loading video file: " + videoMetadataEntity.getFilePath(), e);
         }
 
+    }
+
+    public List<VideoMetadata> getList() {
+
+        List<VideoMetadataEntity> videoMetadataEntities = videoMetadataRepository.findAll();
+
+        return videoMetadataEntities
+            .stream()
+            .map(v -> new VideoMetadata(v.getId(),
+                new VideoFile(v.getFileSize(), v.getFileName(), v.getFilePath(), v.getMimeType()),
+                v.getCreatedAt()))
+            .toList();
     }
 }
