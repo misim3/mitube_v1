@@ -2,11 +2,14 @@ package com.misim.mitube_v1;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.UUID;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -16,6 +19,7 @@ public class VideoService {
     // MAX_SIZE: 100MB
     private static final long MAX_SIZE = 100L * 1024 * 1024;
     private static final String UPLOAD_DIR = "uploads/videos";
+
     private final VideoMetadataRepository videoMetadataRepository;
 
     public VideoService(VideoMetadataRepository videoMetadataRepository) {
@@ -62,5 +66,24 @@ public class VideoService {
 
     }
 
+    public Resource stream(long videoId) {
 
+        VideoMetadataEntity videoMetadataEntity = videoMetadataRepository.findById(videoId).orElseThrow(() -> new RuntimeException("Video not found"));
+
+        try {
+
+            Path path = Paths.get(videoMetadataEntity.getFilePath());
+            Resource resource = new UrlResource(path.toUri());
+
+            if (resource.exists() && resource.isReadable()) {
+                return resource;
+            } else {
+                throw new RuntimeException("Not found or readable file");
+            }
+
+        } catch (MalformedURLException e) {
+            throw new RuntimeException("Error while loading video file: " + videoMetadataEntity.getFilePath(), e);
+        }
+
+    }
 }
