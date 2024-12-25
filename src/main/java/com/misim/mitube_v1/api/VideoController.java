@@ -22,7 +22,7 @@ public class VideoController {
     }
 
     @PostMapping("/videos")
-    public ResponseEntity<?> videoUpload(MultipartFile file) {
+    public ResponseEntity<Void> videoUpload(MultipartFile file) {
 
         String id = videoService.upload(file);
 
@@ -31,7 +31,7 @@ public class VideoController {
     }
 
     @GetMapping("/videos/{id}")
-    public ResponseEntity<?> videoStream(@PathVariable long id) {
+    public ResponseEntity<Resource> videoStream(@PathVariable long id) {
 
         Resource resource = videoService.stream(id);
 
@@ -40,7 +40,7 @@ public class VideoController {
     }
 
     @GetMapping("/videos")
-    public ResponseEntity<?> videoList() {
+    public ResponseEntity<List<VideoMetadata>> videoList() {
 
         List<VideoMetadata> videoMetadataList = videoService.getList();
 
