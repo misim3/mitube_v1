@@ -3,7 +3,6 @@ package com.misim.mitube_v1;
 import com.misim.mitube_v1.domain.VideoFile;
 import com.misim.mitube_v1.domain.VideoMetadata;
 import jakarta.persistence.EntityNotFoundException;
-import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.MalformedURLException;
@@ -45,12 +44,10 @@ public class VideoService {
             throw new IllegalArgumentException("File is too large.");
         }
 
-        File uploadDir = new File(UPLOAD_DIR);
-
-        if (!uploadDir.exists()) {
-            if (!uploadDir.mkdirs()) {
-                throw new IllegalStateException("Unable to create upload directory.");
-            }
+        try {
+            Files.createDirectories(Paths.get(UPLOAD_DIR));
+        } catch (IOException e) {
+            throw new UncheckedIOException("Unable to create upload directory", e);
         }
 
         String uniqueFileName = UUID.randomUUID() + Objects.requireNonNull(
