@@ -2,8 +2,9 @@ package com.misim.mitube_v1;
 
 import com.misim.mitube_v1.domain.VideoFile;
 import com.misim.mitube_v1.domain.VideoMetadata;
-import java.io.File;
+import jakarta.persistence.EntityNotFoundException;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -36,19 +37,17 @@ public class VideoService {
         }
 
         if (!Objects.requireNonNull(file.getContentType()).equals("video/mp4")) {
-            throw new RuntimeException("Invalid video type.");
+            throw new IllegalArgumentException("Invalid video type.");
         }
 
         if (file.getSize() > MAX_SIZE) {
-            throw new RuntimeException("File is too large.");
+            throw new IllegalArgumentException("File is too large.");
         }
 
-        File uploadDir = new File(UPLOAD_DIR);
-
-        if (!uploadDir.exists()) {
-            if (!uploadDir.mkdirs()) {
-                throw new RuntimeException("Unable to create upload directory.");
-            }
+        try {
+            Files.createDirectories(Paths.get(UPLOAD_DIR));
+        } catch (IOException e) {
+            throw new UncheckedIOException("Unable to create upload directory", e);
         }
 
         String uniqueFileName = UUID.randomUUID() + Objects.requireNonNull(
@@ -59,7 +58,7 @@ public class VideoService {
         try {
             Files.write(filePath, file.getBytes());
         } catch (IOException e) {
-            throw new RuntimeException("Failed to store file", e);
+            throw new UncheckedIOException("Failed to store file", e);
         }
 
         VideoMetadataEntity videoMetadataEntity = new VideoMetadataEntity(file.getOriginalFilename(), filePath.toString(), file.getSize(), file.getContentType());
@@ -73,7 +72,7 @@ public class VideoService {
     public Resource stream(long videoId) {
 
         VideoMetadataEntity videoMetadataEntity = videoMetadataRepository.findById(videoId)
-            .orElseThrow(() -> new RuntimeException("Video not found"));
+            .orElseThrow(() -> new EntityNotFoundException("Video not found"));
 
         try {
 
@@ -83,11 +82,12 @@ public class VideoService {
             if (resource.exists() && resource.isReadable()) {
                 return resource;
             } else {
-                throw new RuntimeException("Not found or readable file");
+                throw new IllegalStateException("Not found or readable file");
             }
 
         } catch (MalformedURLException e) {
-            throw new RuntimeException("Error while loading video file: " + videoMetadataEntity.getFilePath(), e);
+            throw new UncheckedIOException(
+                "Error while loading video file: " + videoMetadataEntity.getFilePath(), e);
         }
 
     }
