@@ -1,7 +1,11 @@
 package com.misim.mitube_v1.api;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.misim.mitube_v1.VideoService;
-import java.io.IOException;
+import com.misim.mitube_v1.domain.VideoMetadata;
+import java.util.List;
+import java.util.Objects;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -10,9 +14,9 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.util.LinkedMultiValueMap;
@@ -29,29 +33,53 @@ class VideoControllerTest {
     private TestRestTemplate restTemplate;
 
     @Test
-    void videoUpload_shouldSaveAndReturnLocation_whenSuccessful() throws IOException {
+    void videoUpload_shouldSaveAndReturnLocation_whenSuccessful() {
 
-        MockMultipartFile multipartFile = new MockMultipartFile("file", "test.mp4", "video/mp4",
-            "Hello World".getBytes());
+        //given
+        String filename = "file";
+        String originalFilename = "originalFilename.mp4";
+        String contentType = "video/mp4";
+        String content = "content";
 
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+
         HttpHeaders fileHeaders = new HttpHeaders();
-        fileHeaders.setContentType(MediaType.parseMediaType("video/mp4")); // 비디오 타입 설정
+        fileHeaders.setContentType(MediaType.parseMediaType(contentType));
+
         HttpEntity<ByteArrayResource> filePart = new HttpEntity<>(
-            new ByteArrayResource(multipartFile.getBytes()) {
+            new ByteArrayResource(content.getBytes()) {
                 @Override
                 public String getFilename() {
-                    return multipartFile.getOriginalFilename();
+                    return originalFilename;
                 }
-            }, fileHeaders);
-        body.add("file", filePart);
+            },
+            fileHeaders
+        );
+
+        body.add(filename, filePart);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
         HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(body, headers);
 
+        //when
         ResponseEntity<Void> response = restTemplate.postForEntity("/videos", request, Void.class);
+
+        //then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        String location = Objects.requireNonNull(response.getHeaders().getLocation()).toString();
+        assertThat(location).matches("^/videos/\\d+$");
+
+        Long id = Long.parseLong(location.split("/")[2]);
+
+        List<VideoMetadata> videoMetadata = videoService.getList();
+
+        assertThat(videoMetadata.size()).isEqualTo(1);
+        assertThat(videoMetadata.get(0).id()).isEqualTo(id);
+        assertThat(videoMetadata.get(0).videoFile().originalFileName()).isEqualTo(originalFilename);
+        assertThat(videoMetadata.get(0).videoFile().mimeType()).isEqualTo(contentType);
+
     }
 
     @Test
