@@ -84,22 +84,147 @@ class VideoControllerTest {
 
     @Test
     void videoUpload_shouldThrowException_whenFileEmpty() {
+
+        //given
+        String filename = "file";
+        String originalFilename = "originalFilename.mp4";
+        String contentType = "video/mp4";
+        String emptyContent = "";
+
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+
+        HttpHeaders fileHeaders = new HttpHeaders();
+        fileHeaders.setContentType(MediaType.parseMediaType(contentType));
+
+        HttpEntity<ByteArrayResource> filePart = new HttpEntity<>(
+            new ByteArrayResource(emptyContent.getBytes()) {
+                @Override
+                public String getFilename() {
+                    return originalFilename;
+                }
+            },
+            fileHeaders
+        );
+
+        body.add(filename, filePart);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+        HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(body, headers);
+
+        //when
+        ResponseEntity<String> response = restTemplate.postForEntity("/videos", request,
+            String.class);
+
+        //then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).isEqualTo("File is empty");
+
+        List<VideoMetadata> videoMetadata = videoService.getList();
+
+        assertThat(videoMetadata.size()).isEqualTo(0);
+
     }
 
     @Test
     void videoUpload_shouldThrowException_whenNotSupportFileType() {
+
+        //given
+        String filename = "file";
+        String originalFilename = "originalFilename.mp4";
+        String wrongContentType = "text/plain";
+        String content = "content";
+
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+
+        HttpHeaders fileHeaders = new HttpHeaders();
+        fileHeaders.setContentType(MediaType.parseMediaType(wrongContentType));
+
+        HttpEntity<ByteArrayResource> filePart = new HttpEntity<>(
+            new ByteArrayResource(content.getBytes()) {
+                @Override
+                public String getFilename() {
+                    return originalFilename;
+                }
+            },
+            fileHeaders
+        );
+
+        body.add(filename, filePart);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+        HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(body, headers);
+
+        //when
+        ResponseEntity<String> response = restTemplate.postForEntity("/videos", request,
+            String.class);
+
+        //then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).isEqualTo("Invalid video type.");
+
+        List<VideoMetadata> videoMetadata = videoService.getList();
+
+        assertThat(videoMetadata.size()).isEqualTo(0);
+
     }
 
     @Test
     void videoUpload_shouldThrowException_whenNotSupportFileSize() {
+
+        //given
+        String filename = "file";
+        String originalFilename = "originalFilename.mp4";
+        String contentType = "video/mp4";
+        byte[] largeContent = new byte[100 * 1024 * 1024 + 1];
+
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+
+        HttpHeaders fileHeaders = new HttpHeaders();
+        fileHeaders.setContentType(MediaType.parseMediaType(contentType));
+
+        HttpEntity<ByteArrayResource> filePart = new HttpEntity<>(
+            new ByteArrayResource(largeContent) {
+                @Override
+                public String getFilename() {
+                    return originalFilename;
+                }
+            },
+            fileHeaders
+        );
+
+        body.add(filename, filePart);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+        HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(body, headers);
+
+        //when
+        ResponseEntity<String> response = restTemplate.postForEntity("/videos", request,
+            String.class);
+
+        //then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).isEqualTo("File is too large.");
+
+        List<VideoMetadata> videoMetadata = videoService.getList();
+
+        assertThat(videoMetadata.size()).isEqualTo(0);
+
     }
 
     @Test
     void videoUpload_shouldThrowException_whenDirectoryNotCreated() {
+        // 파일 시스템에서 예외가 발생하는 것은 검증하기 어렵다.
     }
 
     @Test
     void videoUpload_shouldThrowException_whenFileNotWritten() {
+        // 파일 시스템에서 예외가 발생하는 것은 검증하기 어렵다.
     }
 
     @Test
