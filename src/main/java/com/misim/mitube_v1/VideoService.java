@@ -99,7 +99,8 @@ public class VideoService {
         return videoMetadataEntities
             .stream()
             .map(v -> new VideoMetadata(v.getId(),
-                new VideoFile(v.getFileSize(), v.getFileName(), v.getFilePath(), v.getMimeType()),
+                new VideoFile(v.getFileSize(), v.getOriginalFilename(), v.getFilePath(),
+                    v.getMimeType()),
                 v.getCreatedAt()))
             .toList();
     }
