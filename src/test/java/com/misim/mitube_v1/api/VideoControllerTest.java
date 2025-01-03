@@ -11,16 +11,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.multipart.MultipartFile;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @DirtiesContext(classMode = ClassMode.BEFORE_EACH_TEST_METHOD)
@@ -219,35 +224,107 @@ class VideoControllerTest {
 
     @Test
     void videoUpload_shouldThrowException_whenDirectoryNotCreated() {
-        // 파일 시스템에서 예외가 발생하는 것은 검증하기 어렵다.
+        // 예외가 발생하는 것을 검증하기 어렵다.
     }
 
     @Test
     void videoUpload_shouldThrowException_whenFileNotWritten() {
-        // 파일 시스템에서 예외가 발생하는 것은 검증하기 어렵다.
+        // 예외가 발생하는 것을 검증하기 어렵다.
     }
 
     @Test
     void videoStream_shouldReturnResource_whenSuccessful() {
+
+        //given
+        String filename = "file";
+        String originalFilename = "originalFilename.mp4";
+        String contentType = "video/mp4";
+        String content = "content";
+
+        MultipartFile mockMultipartFile = new MockMultipartFile(filename, originalFilename,
+            contentType, content.getBytes());
+        String id = videoService.upload(mockMultipartFile);
+
+        //when
+        ResponseEntity<Resource> response = restTemplate.getForEntity("/videos/" + id,
+            Resource.class);
+
+        //then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        Resource resource = response.getBody();
+        assertThat(resource).isNotNull();
+        assertThat(resource.exists()).isTrue();
+        assertThat(resource.isReadable()).isTrue();
+
     }
 
     @Test
     void videoStream_shouldThrowException_whenMetadataNotFound() {
+
+        //given
+        String wrongId = "99999";
+
+        //when
+        ResponseEntity<String> response = restTemplate.getForEntity("/videos/" + wrongId,
+            String.class);
+
+        //then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody()).isEqualTo("Video not found");
+
     }
 
     @Test
     void videoStream_shouldThrowException_whenFileNotFound() {
+        // 예외가 발생하는 것을 검증하기 어렵다.
     }
 
     @Test
     void videoStream_shouldThrowException_whenFileNotReadable() {
+        // 예외가 발생하는 것을 검증하기 어렵다.
     }
 
     @Test
     void videoStream_shouldThrowException_whenFileNotLoaded() {
+        // 예외가 발생하는 것을 검증하기 어렵다.
     }
 
     @Test
     void videoList_shouldReturnMetadata_whenSuccessful() {
+
+        //given
+        String filename = "file";
+        String originalFilename = "originalFilename.mp4";
+        String contentType = "video/mp4";
+        String content = "content";
+
+        MultipartFile mockMultipartFile = new MockMultipartFile(filename, originalFilename,
+            contentType, content.getBytes());
+        videoService.upload(mockMultipartFile);
+        videoService.upload(mockMultipartFile);
+        videoService.upload(mockMultipartFile);
+
+        //when
+        ResponseEntity<List<VideoMetadata>> response = restTemplate.exchange("/videos",
+            HttpMethod.GET,
+            null,
+            new ParameterizedTypeReference<>() {
+            }
+        );
+
+        //then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        List<VideoMetadata> videoMetadata = response.getBody();
+        assertThat(videoMetadata.size()).isEqualTo(3);
+
+        for (int i = 0; i < 3; i++) {
+            assertThat(videoMetadata.get(i).id()).isEqualTo(i + 1);
+            assertThat(videoMetadata.get(i).videoFile().originalFileName()).isEqualTo(
+                originalFilename);
+            assertThat(videoMetadata.get(i).videoFile().mimeType()).isEqualTo(contentType);
+        }
+
     }
+
 }
