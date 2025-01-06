@@ -7,7 +7,7 @@ import jakarta.persistence.Entity;
 public class VideoMetadataEntity extends BaseEntity {
 
     @Column
-    private String fileName;
+    private String originalFilename;
 
     @Column
     private String filePath;
@@ -20,15 +20,16 @@ public class VideoMetadataEntity extends BaseEntity {
 
     protected VideoMetadataEntity() {}
 
-    public VideoMetadataEntity(String fileName, String filePath, Long fileSize, String mimeType) {
-        this.fileName = fileName;
+    public VideoMetadataEntity(String originalFilename, String filePath, Long fileSize,
+        String mimeType) {
+        this.originalFilename = originalFilename;
         this.filePath = filePath;
         this.fileSize = fileSize;
         this.mimeType = mimeType;
     }
 
-    public String getFileName() {
-        return fileName;
+    public String getOriginalFilename() {
+        return originalFilename;
     }
 
     public String getFilePath() {
