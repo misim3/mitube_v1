@@ -13,3 +13,6 @@
 
 - Java, Spring Boot, MySQL
 - GitHub PR 리뷰 기반 개발
+
+## 참고자료
+[포트폴리오](https://curious-raver-f98.notion.site/2032515049b9805cb3dac1f4ba2ce135#2062515049b9807a9f79d89ccc46c3df)
