@@ -1,5 +1,7 @@
 package com.misim.mitube_v1;
 
+import com.misim.mitube_v1.db.VideoMetadataEntity;
+import com.misim.mitube_v1.db.VideoMetadataRepository;
 import com.misim.mitube_v1.domain.VideoFile;
 import com.misim.mitube_v1.domain.VideoMetadata;
 import jakarta.persistence.EntityNotFoundException;

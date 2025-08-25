@@ -1,4 +1,4 @@
-package com.misim.mitube_v1;
+package com.misim.mitube_v1.db;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
