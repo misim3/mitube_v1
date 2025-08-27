@@ -49,7 +49,7 @@ public class ProgressFlushJob {
             return;
         }
 
-        log.info("PROGRESS flush candidates={}", tuples == null ? 0 : tuples.size());
+        log.info("PROGRESS flush candidates={}", tuples.size());
         List<String> members = tuples.stream().map(TypedTuple::getValue).toList();
         List<ProgressUpsert> rows = new ArrayList<>(members.size());
 
