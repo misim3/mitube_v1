@@ -18,6 +18,9 @@ public class VideoMetadataEntity extends BaseEntity {
     @Column
     private String mimeType;
 
+    @Column
+    private long viewCount = 0L;
+
     protected VideoMetadataEntity() {}
 
     public VideoMetadataEntity(String originalFilename, String filePath, Long fileSize,
@@ -44,4 +47,11 @@ public class VideoMetadataEntity extends BaseEntity {
         return mimeType;
     }
 
+    public long getViewCount() {
+        return viewCount;
+    }
+
+    public void setViewCount(long viewCount) {
+        this.viewCount = viewCount;
+    }
 }

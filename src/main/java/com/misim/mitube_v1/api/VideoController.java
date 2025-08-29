@@ -2,7 +2,9 @@ package com.misim.mitube_v1.api;
 
 import com.misim.mitube_v1.VideoService;
 import com.misim.mitube_v1.domain.VideoMetadata;
+import jakarta.servlet.http.HttpServletRequest;
 import java.net.URI;
+import java.security.Principal;
 import java.util.List;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
@@ -48,4 +50,28 @@ public class VideoController {
 
     }
 
+    @PostMapping("/videos/{id}/views")
+    public ResponseEntity<Long> views(@PathVariable long id, HttpServletRequest request) {
+        long total = videoService.recordImpression(id,
+            fingerprint(request, request.getUserPrincipal()));
+        return ResponseEntity.ok(total);
+    }
+
+    private String fingerprint(HttpServletRequest req, Principal principal) {
+        if (principal != null) {
+            return "u:" + principal.getName();
+        }
+        String ip = req.getHeader("X-Forwarded-For");
+        if (ip == null || ip.isBlank()) {
+            ip = req.getRemoteAddr();
+        }
+        String ua = req.getHeader("User-Agent");
+        return "g:" + ip + ":" + (ua == null ? "" : Integer.toHexString(ua.hashCode()));
+    }
+
+    @GetMapping("videos/{id}/views/peek")
+    public ResponseEntity<Long> viewsPeek(@PathVariable long id) {
+        long total = videoService.currentViews(id);
+        return ResponseEntity.ok(total);
+    }
 }
