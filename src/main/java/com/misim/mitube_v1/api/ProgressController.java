@@ -20,7 +20,7 @@ public class ProgressController {
         this.progressService = progressService;
     }
 
-//    @PutMapping("/sync")
+//    @PutMapping
 //    public ResponseEntity<GetProgressResponse> put(
 //        @PathVariable Long videoId,
 //        @RequestBody PutProgressRequest req,
